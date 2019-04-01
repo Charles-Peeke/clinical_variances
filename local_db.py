@@ -17,20 +17,36 @@ def create_env_vars():
     username = os.getenv('username')
     password = os.getenv('password')
 
-def compute_results():
-    print('computing results')
-    conn = psycopg2.connect(host=hostname, database=database, user=username, password=password)
-    # df = pd.read_sql('select name from ctgov.studies RIGHT JOIN ctgov.sponsors ON ctgov.studies.nct_id = ctgov.sponsors.nct_id', con=conn)
-    df = pd.read_sql('select * from ctgov.studies', con=conn)
-    print('done')
-    return df
+
+def get_studies():
+    return pd.read_sql('select * from ctgov.studies', con=conn)
+
+
+def get_keywords():
+    return pd.read_sql('select * from ctgov.keywords', con=conn)
+
+
+def get_sponsors():
+    return pd.read_sql('select * from ctgov.sponsors', con=conn)
+
+
+def join_tables(first_table_name, second_table_name):
+    return pd.read_sql('select * from ' +
+          first_table_name +
+          ' RIGHT JOIN ' +
+          second_table_name + ' ON ' + first_table_name + '.nct_id = ' + second_table_name + '.nct_id', con=conn)
+
 
 if __name__ == '__main__':
     load_dotenv()
     create_env_vars()
     conn = psycopg2.connect(host=hostname, database=database, user=username, password=password)
     start_time = time.time()
-    results = compute_results()
+    results = join_tables('ctgov.studies', 'ctgov.keywords')
     end_time = time.time()
-    print(results)
+    # print(results)
     print(end_time - start_time)
+
+    start_time = time.time()
+    pd.read_sql('select * from ctgov.studies RIGHT JOIN ctgov.keywords ON ctgov.studies.nct_id = ctgov.keywords.nct_id', con=conn)
+    end_time = time.time()
